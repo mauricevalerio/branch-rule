@@ -1,0 +1,52 @@
+name: Merge Rules
+
+on: pull_request
+
+jobs:
+  check-branch-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Validate branch name
+        run: |
+          BRANCH_NAME="${{ github.head_ref }}"
+          PATTERN='^(master|main|TEST|DEV|PROD|UAT|feature|hotfix)(\/.*)?$'
+
+          if [[ !$BRANCH_NAME =~ $PATTERN ]]; then
+            echo "Error: Branch name '$BRANCH_NAME' must match the pattern '$PATTERN' and be in lowercase."
+            exit 1
+          fi
+
+          echo "Branch name '$BRANCH_NAME' is valid."
+          
+      - name: Block merge to DEV
+        if: github.base_ref == 'DEV' && (github.head_ref != 'main' && github.head_ref != 'master' && !contains(github.head_ref, 'feature/'))
+        run: |
+          echo "Error: You can only merge main, master, or feature/* branches to DEV"
+          exit 1
+        
+      - name: Block merge to TEST
+        if: github.base_ref == 'TEST' && github.head_ref != 'DEV'
+        run: |
+          echo "Error: You can only merge DEV to TEST"
+          exit 1
+
+      - name: Block merge to UAT
+        if: github.base_ref == 'UAT' && github.head_ref != 'TEST'
+        run: |
+          echo "Error: You can only merge TEST to UAT"
+          exit 1
+          
+      - name: Block merge to PROD
+        if: github.base_ref == 'PROD' && (github.head_ref != 'UAT' && !contains(github.head_ref, 'hotfix/'))
+        run: |
+          echo "Error: You can only merge UAT or hotfix/* branches to PROD"
+          exit 1
+
+      - name: Block merge to main or master
+        if: (github.base_ref == 'main' || github.base_ref == 'master') && github.head_ref != 'PROD'
+        run: |
+          echo "Error: You can only merge PROD to main or master"
+          exit 1

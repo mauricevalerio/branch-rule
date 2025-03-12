@@ -1,18 +1,62 @@
-name: GitHub Actions Demo
-run-name: ${{ github.actor }} is testing out GitHub Actions 🚀
-on: [push]
+name: Branch Rules
+
+on: 
+  pull_request:
+    branches:
+    - 'feature/**'
+    - 'hotfix/**'
+    - DEV
+    - TEST
+    - UAT
+    - PROD
+    - main
+    - master
+
 jobs:
-  Explore-GitHub-Actions:
+  branching-rules:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
-      - run: echo "🐧 This job is now running on a ${{ runner.os }} server hosted by GitHub!"
-      - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
-      - name: Check out repository code
+      - name: Checkout code
         uses: actions/checkout@v4
-      - run: echo "💡 The ${{ github.repository }} repository has been cloned to the runner."
-      - run: echo "🖥️ The workflow is now ready to test your code on the runner."
-      - name: List files in the repository
+
+      - name: Validate branch name
         run: |
-          ls ${{ github.workspace }}
-      - run: echo "🍏 This job's status is ${{ job.status }}."
+          BRANCH_NAME="${{ github.head_ref }}"
+          PATTERN='^(master|main|TEST|DEV|PROD|UAT|feature|hotfix)(\/.*)?$'
+
+          if [[ !$BRANCH_NAME =~ $PATTERN ]]; then
+            echo "Error: Branch name '$BRANCH_NAME' must match the pattern '$PATTERN' and be in lowercase."
+            exit 1
+          fi
+
+          echo "Branch name '$BRANCH_NAME' is valid."
+          
+      - name: Block merge to DEV
+        if: github.base_ref == 'DEV' && (github.head_ref != 'main' && github.head_ref != 'master' && !contains(github.head_ref, 'feature/'))
+        run: |
+          echo "Error: You can only merge main, master, or feature/* branches to DEV"
+          exit 1
+        
+      - name: Block merge to TEST
+        if: github.base_ref == 'TEST' && github.head_ref != 'DEV'
+        run: |
+          echo "Error: You can only merge DEV to TEST"
+          exit 1
+
+      - name: Block merge to UAT
+        if: github.base_ref == 'UAT' && github.head_ref != 'TEST'
+        run: |
+          echo "Error: You can only merge TEST to UAT"
+          exit 1
+          
+      - name: Block merge to PROD
+        if: github.base_ref == 'PROD' && (github.head_ref != 'UAT' && !contains(github.head_ref, 'hotfix/'))
+        run: |
+          echo "Error: You can only merge UAT or hotfix/* branches to PROD"
+          exit 1
+
+      - name: Block merge to main or master
+        if: (github.base_ref == 'main' || github.base_ref == 'master') && github.head_ref != 'PROD'
+        run: |
+          echo "Error: You can only merge PROD to main or master"
+          exit 1

@@ -24,7 +24,7 @@ jobs:
           BRANCH_NAME="${{ github.head_ref }}"
           PATTERN='^(master|main|TEST|DEV|PROD|UAT|feature|hotfix)(\/.*)?$'
 
-          if [[ !$BRANCH_NAME =~ $PATTERN ]]; then
+          if [[ ! $BRANCH_NAME =~ $PATTERN ]]; then
             echo "Error: Branch name '$BRANCH_NAME' must match the pattern '$PATTERN' and be in lowercase."
             exit 1
           fi

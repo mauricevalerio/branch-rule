@@ -1,0 +1,16 @@
+name: Java build check
+
+on:
+  pull_request:
+    branches:
+    - DEV
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    
+    - name: Test name build
+      run: |
+        echo "TEST"

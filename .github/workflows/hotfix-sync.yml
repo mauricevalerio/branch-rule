@@ -1,0 +1,66 @@
+name: Sync Hotfix to Lower Environments
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - PROD
+
+jobs:
+  sync-hotfix:
+    # Only run if PR was merged and source branch was a hotfix
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'hotfix/')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Get hotfix branch name
+        id: get-branch
+        run: echo "hotfix_branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+      
+      - name: Merge hotfix to DEV
+        run: |
+          git fetch origin DEV
+          git checkout DEV
+          git merge origin/${{ steps.get-branch.outputs.hotfix_branch }} --no-ff -m "Merge hotfix ${{ steps.get-branch.outputs.hotfix_branch }} to ${{ github.ref_name }}"
+          git push origin DEV
+        continue-on-error: true
+        id: merge-dev
+      
+      - name: Merge hotfix to TEST
+        run: |
+          git fetch origin TEST
+          git checkout TEST
+          git merge origin/${{ steps.get-branch.outputs.hotfix_branch }} --no-ff -m "Merge hotfix ${{ steps.get-branch.outputs.hotfix_branch }} to ${{ github.ref_name }}"
+          git push origin TEST
+        continue-on-error: true
+        id: merge-test
+      
+      - name: Merge hotfix to UAT
+        run: |
+          git fetch origin UAT
+          git checkout UAT
+          git merge origin/${{ steps.get-branch.outputs.hotfix_branch }} --no-ff -m "Merge hotfix ${{ steps.get-branch.outputs.hotfix_branch }} to ${{ github.ref_name }}"
+          git push origin UAT
+        continue-on-error: true
+        id: merge-uat
+      
+      - name: Report merge status
+        if: always()
+        run: |
+          echo "## Hotfix Sync Results" >> $GITHUB_STEP_SUMMARY
+          echo "Hotfix branch: ${{ steps.get-branch.outputs.hotfix_branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- DEV: ${{ steps.merge-dev.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- TEST: ${{ steps.merge-test.outcome }}" >> $GITHUB_STEP_SUMMARY
+          echo "- UAT: ${{ steps.merge-uat.outcome }}" >> $GITHUB_STEP_SUMMARY

@@ -63,5 +63,5 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- DEV: ${{ steps.merge-dev.outcome }}" >> $GITHUB_STEP_SUMMARY
           echo "- TEST: ${{ steps.merge-test.outcome }}" >> $GITHUB_STEP_SUMMARY
-
           echo "- UAT: ${{ steps.merge-uat.outcome }}" >> $GITHUB_STEP_SUMMARY
+

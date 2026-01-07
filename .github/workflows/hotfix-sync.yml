@@ -30,8 +30,7 @@ jobs:
           echo "hotfix_branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
           echo "merge_sha=${{ github.event.pull_request.merge_commit_sha }}" >> $GITHUB_OUTPUT
           echo "pr_number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
-          echo "timestamp=$(date +%s)" >> $GITHUB_OUTPUT
-      
+
       - name: Create PR for DEV
         id: pr-dev
         uses: actions/github-script@v7
@@ -39,7 +38,7 @@ jobs:
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
           script: |
-            const branchName = `sync-hotfix-to-dev-${{ steps.get-info.outputs.timestamp }}`;
+            const branchName = `hotfix/sync-hotfix-to-dev`;
             
             // Create branch from merge commit
             await github.rest.git.createRef({
@@ -66,8 +65,8 @@ jobs:
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Sync hotfix ${{ steps.get-info.outputs.hotfix_branch }} to DEV`,
-              body: `Automated sync of hotfix from PROD to DEV\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
+              title: `Sync ${{ steps.get-info.outputs.hotfix_branch }} to DEV`,
+              body: `Automated sync of hotfix from PROD to DEV\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\n\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
               head: branchName,
               base: 'DEV'
             });
@@ -99,7 +98,7 @@ jobs:
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
           script: |
-            const branchName = `sync-hotfix-to-test-${{ steps.get-info.outputs.timestamp }}`;
+            const branchName = `hotfix/sync-hotfix-to-test`;
             
             await github.rest.git.createRef({
               owner: context.repo.owner,
@@ -123,7 +122,7 @@ jobs:
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Sync hotfix ${{ steps.get-info.outputs.hotfix_branch }} to TEST`,
+              title: `Sync ${{ steps.get-info.outputs.hotfix_branch }} to TEST`,
               body: `Automated sync of hotfix from PROD to TEST\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
               head: branchName,
               base: 'TEST'
@@ -154,7 +153,7 @@ jobs:
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
           script: |
-            const branchName = `sync-hotfix-to-uat-${{ steps.get-info.outputs.timestamp }}`;
+            const branchName = `hotfix/sync-hotfix-to-uat`;
             
             await github.rest.git.createRef({
               owner: context.repo.owner,
@@ -178,7 +177,7 @@ jobs:
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              title: `Sync hotfix ${{ steps.get-info.outputs.hotfix_branch }} to UAT`,
+              title: `Sync ${{ steps.get-info.outputs.hotfix_branch }} to UAT`,
               body: `Automated sync of hotfix from PROD to UAT\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
               head: branchName,
               base: 'UAT'
@@ -211,7 +210,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ steps.pr-dev.outcome }}" == "success" ]; then
-            echo "✅ DEV: PR #${{ steps.pr-dev.outputs.pr_number }} - ${{ steps.pr-dev.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
+            echo "✅ DEV: PR #${{ steps.pr-dev.outputs.pr_number }} - ${{ steps.pr-dev.outputs.pr_url }} - ${{ context.repo.owner }} - ${{ context.repo.repo }}" >> $GITHUB_STEP_SUMMARY
             if [ "${{ steps.pr-dev.outputs.auto_merged }}" == "true" ]; then
               echo "    Auto-merged successfully" >> $GITHUB_STEP_SUMMARY
             else

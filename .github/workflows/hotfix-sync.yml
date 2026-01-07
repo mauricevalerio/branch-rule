@@ -17,22 +17,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }} #Add secret to repo
       
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
       
-      - name: Get hotfix branch name
-        id: get-branch
-        run: echo "hotfix_branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+      - name: Get hotfix information
+        id: get-info
+        run: |
+          echo "hotfix_branch=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+          echo "merge_sha=${{ github.event.pull_request.merge_commit_sha }}" >> $GITHUB_OUTPUT
       
       - name: Merge hotfix to DEV
         run: |
           git fetch origin DEV
           git checkout DEV
-          git merge origin/${{ steps.get-branch.outputs.hotfix_branch }} --no-ff -m "Merge hotfix ${{ steps.get-branch.outputs.hotfix_branch }} to ${{ github.ref_name }}"
+          git merge ${{ steps.get-info.outputs.merge_sha }} --no-ff -m "Merge ${{ steps.get-branch.outputs.hotfix_branch }} to DEV"
           git push origin DEV
         continue-on-error: true
         id: merge-dev
@@ -41,7 +43,7 @@ jobs:
         run: |
           git fetch origin TEST
           git checkout TEST
-          git merge origin/${{ steps.get-branch.outputs.hotfix_branch }} --no-ff -m "Merge hotfix ${{ steps.get-branch.outputs.hotfix_branch }} to ${{ github.ref_name }}"
+          git merge ${{ steps.get-info.outputs.merge_sha }} --no-ff -m "Merge ${{ steps.get-branch.outputs.hotfix_branch }} to TEST"
           git push origin TEST
         continue-on-error: true
         id: merge-test
@@ -50,7 +52,7 @@ jobs:
         run: |
           git fetch origin UAT
           git checkout UAT
-          git merge origin/${{ steps.get-branch.outputs.hotfix_branch }} --no-ff -m "Merge hotfix ${{ steps.get-branch.outputs.hotfix_branch }} to ${{ github.ref_name }}"
+          git merge ${{ steps.get-branch.outputs.hotfix_branch.merge_sha }} --no-ff -m "Merge ${{ steps.get-branch.outputs.hotfix_branch }} to UAT"
           git push origin UAT
         continue-on-error: true
         id: merge-uat
@@ -60,6 +62,7 @@ jobs:
         run: |
           echo "## Hotfix Sync Results" >> $GITHUB_STEP_SUMMARY
           echo "Hotfix branch: ${{ steps.get-branch.outputs.hotfix_branch }}" >> $GITHUB_STEP_SUMMARY
+          echo "Merge commit: ${{ steps.get-info.outputs.merge_sha }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- DEV: ${{ steps.merge-dev.outcome }}" >> $GITHUB_STEP_SUMMARY
           echo "- TEST: ${{ steps.merge-test.outcome }}" >> $GITHUB_STEP_SUMMARY

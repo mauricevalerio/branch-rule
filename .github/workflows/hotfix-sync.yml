@@ -210,7 +210,7 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ steps.pr-dev.outcome }}" == "success" ]; then
-            echo "✅ DEV: PR #${{ steps.pr-dev.outputs.pr_number }} - ${{ steps.pr-dev.outputs.pr_url }} - ${{ context.repo.owner }} - ${{ context.repo.repo }}" >> $GITHUB_STEP_SUMMARY
+            echo "✅ DEV: PR #${{ steps.pr-dev.outputs.pr_number }} - ${{ steps.pr-dev.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
             if [ "${{ steps.pr-dev.outputs.auto_merged }}" == "true" ]; then
               echo "    Auto-merged successfully" >> $GITHUB_STEP_SUMMARY
             else

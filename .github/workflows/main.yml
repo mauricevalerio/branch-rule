@@ -32,19 +32,19 @@ jobs:
           echo "Branch name '$BRANCH_NAME' is valid."
           
       - name: Block merge to DEV
-        if: github.base_ref == 'DEV' && (github.head_ref != 'main' && github.head_ref != 'master' && !contains(github.head_ref, 'feature/'))
+        if: github.base_ref == 'DEV' && (github.head_ref != 'main' && github.head_ref != 'master' && !contains(github.head_ref, 'feature/') && !contains(github.head_ref, 'hotfix/'))
         run: |
-          echo "Error: You can only merge main, master, or feature/* branches to DEV"
+          echo "Error: You can only merge main, master, feature/*, or hotfix/* branches to DEV"
           exit 1
         
       - name: Block merge to TEST
-        if: github.base_ref == 'TEST' && github.head_ref != 'DEV'
+        if: github.base_ref == 'TEST' && (github.head_ref != 'DEV' && !contains(github.head_ref, 'hotfix/'))
         run: |
           echo "Error: You can only merge DEV to TEST"
           exit 1
 
       - name: Block merge to UAT
-        if: github.base_ref == 'UAT' && github.head_ref != 'TEST'
+        if: github.base_ref == 'UAT' && (github.head_ref != 'TEST' && !contains(github.head_ref, 'hotfix/'))
         run: |
           echo "Error: You can only merge TEST to UAT"
           exit 1

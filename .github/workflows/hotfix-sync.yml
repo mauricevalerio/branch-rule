@@ -52,20 +52,7 @@ jobs:
             core.setOutput('pr_number', pr.data.number);
             core.setOutput('pr_url', pr.data.html_url);
             
-            // Enable auto-merge if all checks pass
-            try {
-              await github.rest.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.data.number,
-                merge_method: 'merge'
-              });
-              core.setOutput('auto_merged', 'true');
-            } catch (error) {
-              // PR has required checks, will need to wait for them
-              console.log('PR created, waiting for required checks to pass');
-              core.setOutput('auto_merged', 'false');
-            }
+            console.log('PR created, waiting for required checks to pass');
             
             return pr.data.number;
       
@@ -89,18 +76,7 @@ jobs:
             core.setOutput('pr_number', pr.data.number);
             core.setOutput('pr_url', pr.data.html_url);
             
-            try {
-              await github.rest.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.data.number,
-                merge_method: 'merge'
-              });
-              core.setOutput('auto_merged', 'true');
-            } catch (error) {
-              console.log('PR created, waiting for required checks to pass');
-              core.setOutput('auto_merged', 'false');
-            }
+            console.log('PR created, waiting for required checks to pass');
             
             return pr.data.number;
       
@@ -124,18 +100,7 @@ jobs:
             core.setOutput('pr_number', pr.data.number);
             core.setOutput('pr_url', pr.data.html_url);
             
-            try {
-              await github.rest.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.data.number,
-                merge_method: 'merge'
-              });
-              core.setOutput('auto_merged', 'true');
-            } catch (error) {
-              console.log('PR created, waiting for required checks to pass');
-              core.setOutput('auto_merged', 'false');
-            }
+            console.log('PR created, waiting for required checks to pass');
             
             return pr.data.number;
       
@@ -149,33 +114,22 @@ jobs:
           
           if [ "${{ steps.pr-dev.outcome }}" == "success" ]; then
             echo "✅ DEV: PR #${{ steps.pr-dev.outputs.pr_number }} - ${{ steps.pr-dev.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ steps.pr-dev.outputs.auto_merged }}" == "true" ]; then
-              echo "    Auto-merged successfully" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
-            fi
+            echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ DEV: Failed to create PR" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [ "${{ steps.pr-test.outcome }}" == "success" ]; then
             echo "✅ TEST: PR #${{ steps.pr-test.outputs.pr_number }} - ${{ steps.pr-test.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ steps.pr-test.outputs.auto_merged }}" == "true" ]; then
-              echo "    Auto-merged successfully" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
-            fi
+            echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ TEST: Failed to create PR" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [ "${{ steps.pr-uat.outcome }}" == "success" ]; then
             echo "✅ UAT: PR #${{ steps.pr-uat.outputs.pr_number }} - ${{ steps.pr-uat.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ steps.pr-uat.outputs.auto_merged }}" == "true" ]; then
-              echo "    Auto-merged successfully" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
-            fi
+            echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
+            
           else
             echo "❌ UAT: Failed to create PR" >> $GITHUB_STEP_SUMMARY
           fi

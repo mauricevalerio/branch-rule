@@ -76,21 +76,13 @@ jobs:
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
           script: |
-            const branchName = `hotfix/sync-hotfix-to-test`;
-            
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/heads/${branchName}`,
-              sha: '${{ steps.get-info.outputs.merge_sha }}'
-            });
             
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Sync ${{ steps.get-info.outputs.hotfix_branch }} to TEST`,
-              body: `Automated sync of hotfix from PROD to TEST\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
-              head: branchName,
+              body: `Automated sync of hotfix from PROD to TEST\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\n\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
+              head: "${{ steps.get-info.outputs.hotfix_branch }}",
               base: 'TEST'
             });
             
@@ -119,21 +111,13 @@ jobs:
         with:
           github-token: ${{ secrets.PAT_TOKEN }}
           script: |
-            const branchName = `hotfix/sync-hotfix-to-uat`;
-            
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/heads/${branchName}`,
-              sha: '${{ steps.get-info.outputs.merge_sha }}'
-            });
             
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Sync ${{ steps.get-info.outputs.hotfix_branch }} to UAT`,
-              body: `Automated sync of hotfix from PROD to UAT\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
-              head: branchName,
+              body: `Automated sync of hotfix from PROD to UAT\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\n\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
+              head: "${{ steps.get-info.outputs.hotfix_branch }}",
               base: 'UAT'
             });
             
@@ -195,4 +179,3 @@ jobs:
           else
             echo "❌ UAT: Failed to create PR" >> $GITHUB_STEP_SUMMARY
           fi
-

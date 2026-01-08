@@ -48,19 +48,6 @@ jobs:
               sha: '${{ steps.get-info.outputs.merge_sha }}'
             });
             
-            // Merge DEV into the new branch to prepare for PR
-            try {
-              await github.rest.repos.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: branchName,
-                head: 'DEV',
-                commit_message: 'Merge DEV to prepare for hotfix sync'
-              });
-            } catch (error) {
-              console.log('No merge needed or conflict - proceeding with PR');
-            }
-            
             // Create pull request
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
@@ -107,18 +94,6 @@ jobs:
               sha: '${{ steps.get-info.outputs.merge_sha }}'
             });
             
-            try {
-              await github.rest.repos.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: branchName,
-                head: 'TEST',
-                commit_message: 'Merge TEST to prepare for hotfix sync'
-              });
-            } catch (error) {
-              console.log('No merge needed or conflict - proceeding with PR');
-            }
-            
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -161,18 +136,6 @@ jobs:
               ref: `refs/heads/${branchName}`,
               sha: '${{ steps.get-info.outputs.merge_sha }}'
             });
-            
-            try {
-              await github.rest.repos.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: branchName,
-                head: 'UAT',
-                commit_message: 'Merge UAT to prepare for hotfix sync'
-              });
-            } catch (error) {
-              console.log('No merge needed or conflict - proceeding with PR');
-            }
             
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,

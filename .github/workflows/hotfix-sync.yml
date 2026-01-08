@@ -39,7 +39,6 @@ jobs:
           github-token: ${{ secrets.PAT_TOKEN }}
           script: |
             
-            // Create pull request
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -113,23 +112,19 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ steps.pr-dev.outcome }}" == "success" ]; then
-            echo "✅ DEV: PR #${{ steps.pr-dev.outputs.pr_number }} - ${{ steps.pr-dev.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
+            echo "✅ DEV: PR #${{ steps.pr-dev.outputs.pr_number }} - ${{ steps.pr-dev.outputs.pr_url }} successfully created." >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ DEV: Failed to create PR" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [ "${{ steps.pr-test.outcome }}" == "success" ]; then
-            echo "✅ TEST: PR #${{ steps.pr-test.outputs.pr_number }} - ${{ steps.pr-test.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
+            echo "✅ TEST: PR #${{ steps.pr-test.outputs.pr_number }} - ${{ steps.pr-test.outputs.pr_url }} successfully created." >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ TEST: Failed to create PR" >> $GITHUB_STEP_SUMMARY
           fi
           
           if [ "${{ steps.pr-uat.outcome }}" == "success" ]; then
-            echo "✅ UAT: PR #${{ steps.pr-uat.outputs.pr_number }} - ${{ steps.pr-uat.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
-            
+            echo "✅ UAT: PR #${{ steps.pr-uat.outputs.pr_number }} - ${{ steps.pr-uat.outputs.pr_url }} successfully created." >> $GITHUB_STEP_SUMMARY
           else
             echo "❌ UAT: Failed to create PR" >> $GITHUB_STEP_SUMMARY
           fi

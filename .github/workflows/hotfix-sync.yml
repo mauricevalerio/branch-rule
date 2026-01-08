@@ -45,7 +45,7 @@ jobs:
               repo: context.repo.repo,
               title: `Sync ${{ steps.get-info.outputs.hotfix_branch }} to DEV`,
               body: `Automated sync of hotfix from PROD to DEV\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\n\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
-              head: "${{ steps.get-info.outputs.hotfix_branch }}"",
+              head: "${{ steps.get-info.outputs.hotfix_branch }}",
               base: 'DEV'
             });
             
@@ -195,3 +195,4 @@ jobs:
           else
             echo "❌ UAT: Failed to create PR" >> $GITHUB_STEP_SUMMARY
           fi
+

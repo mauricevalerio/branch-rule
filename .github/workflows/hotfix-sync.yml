@@ -13,11 +13,18 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+      - name: Generate token
+        id: generate-token
+        uses: tibdex/github-app-token@v2
+        with:
+          app_id: ${{ secrets.APP_ID }}
+          private_key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          token: ${{ secrets.PAT_TOKEN }} #Add secret to repo
+          token: ${{ steps.generate-token.outputs.token }}
       
       - name: Configure Git
         run: |
@@ -36,58 +43,22 @@ jobs:
         uses: actions/github-script@v7
         continue-on-error: true
         with:
-          github-token: ${{ secrets.PAT_TOKEN }}
+          github-token: ${{ steps.generate-token.outputs.token }}
           script: |
-            const branchName = `hotfix/sync-hotfix-to-dev`;
             
-            // Create branch from merge commit
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/heads/${branchName}`,
-              sha: '${{ steps.get-info.outputs.merge_sha }}'
-            });
-            
-            // Merge DEV into the new branch to prepare for PR
-            try {
-              await github.rest.repos.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: branchName,
-                head: 'DEV',
-                commit_message: 'Merge DEV to prepare for hotfix sync'
-              });
-            } catch (error) {
-              console.log('No merge needed or conflict - proceeding with PR');
-            }
-            
-            // Create pull request
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Sync ${{ steps.get-info.outputs.hotfix_branch }} to DEV`,
               body: `Automated sync of hotfix from PROD to DEV\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\n\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
-              head: branchName,
+              head: "${{ steps.get-info.outputs.hotfix_branch }}",
               base: 'DEV'
             });
             
             core.setOutput('pr_number', pr.data.number);
             core.setOutput('pr_url', pr.data.html_url);
             
-            // Enable auto-merge if all checks pass
-            try {
-              await github.rest.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.data.number,
-                merge_method: 'merge'
-              });
-              core.setOutput('auto_merged', 'true');
-            } catch (error) {
-              // PR has required checks, will need to wait for them
-              console.log('PR created, waiting for required checks to pass');
-              core.setOutput('auto_merged', 'false');
-            }
+            console.log('PR created, waiting for required checks to pass');
             
             return pr.data.number;
       
@@ -96,53 +67,22 @@ jobs:
         uses: actions/github-script@v7
         continue-on-error: true
         with:
-          github-token: ${{ secrets.PAT_TOKEN }}
+          github-token: ${{ steps.generate-token.outputs.token }}
           script: |
-            const branchName = `hotfix/sync-hotfix-to-test`;
-            
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/heads/${branchName}`,
-              sha: '${{ steps.get-info.outputs.merge_sha }}'
-            });
-            
-            try {
-              await github.rest.repos.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: branchName,
-                head: 'TEST',
-                commit_message: 'Merge TEST to prepare for hotfix sync'
-              });
-            } catch (error) {
-              console.log('No merge needed or conflict - proceeding with PR');
-            }
             
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Sync ${{ steps.get-info.outputs.hotfix_branch }} to TEST`,
-              body: `Automated sync of hotfix from PROD to TEST\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
-              head: branchName,
+              body: `Automated sync of hotfix from PROD to TEST\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\n\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
+              head: "${{ steps.get-info.outputs.hotfix_branch }}",
               base: 'TEST'
             });
             
             core.setOutput('pr_number', pr.data.number);
             core.setOutput('pr_url', pr.data.html_url);
             
-            try {
-              await github.rest.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.data.number,
-                merge_method: 'merge'
-              });
-              core.setOutput('auto_merged', 'true');
-            } catch (error) {
-              console.log('PR created, waiting for required checks to pass');
-              core.setOutput('auto_merged', 'false');
-            }
+            console.log('PR created, waiting for required checks to pass');
             
             return pr.data.number;
       
@@ -151,53 +91,22 @@ jobs:
         uses: actions/github-script@v7
         continue-on-error: true
         with:
-          github-token: ${{ secrets.PAT_TOKEN }}
+          github-token: ${{ steps.generate-token.outputs.token }}
           script: |
-            const branchName = `hotfix/sync-hotfix-to-uat`;
-            
-            await github.rest.git.createRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: `refs/heads/${branchName}`,
-              sha: '${{ steps.get-info.outputs.merge_sha }}'
-            });
-            
-            try {
-              await github.rest.repos.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                base: branchName,
-                head: 'UAT',
-                commit_message: 'Merge UAT to prepare for hotfix sync'
-              });
-            } catch (error) {
-              console.log('No merge needed or conflict - proceeding with PR');
-            }
             
             const pr = await github.rest.pulls.create({
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: `Sync ${{ steps.get-info.outputs.hotfix_branch }} to UAT`,
-              body: `Automated sync of hotfix from PROD to UAT\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
-              head: branchName,
+              body: `Automated sync of hotfix from PROD to UAT\n\nOriginal PR: #${{ steps.get-info.outputs.pr_number }}\n\nHotfix branch: ${{ steps.get-info.outputs.hotfix_branch }}`,
+              head: "${{ steps.get-info.outputs.hotfix_branch }}",
               base: 'UAT'
             });
             
             core.setOutput('pr_number', pr.data.number);
             core.setOutput('pr_url', pr.data.html_url);
             
-            try {
-              await github.rest.pulls.merge({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                pull_number: pr.data.number,
-                merge_method: 'merge'
-              });
-              core.setOutput('auto_merged', 'true');
-            } catch (error) {
-              console.log('PR created, waiting for required checks to pass');
-              core.setOutput('auto_merged', 'false');
-            }
+            console.log('PR created, waiting for required checks to pass');
             
             return pr.data.number;
       
@@ -210,34 +119,19 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ "${{ steps.pr-dev.outcome }}" == "success" ]; then
-            echo "✅ DEV: PR #${{ steps.pr-dev.outputs.pr_number }} - ${{ steps.pr-dev.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ steps.pr-dev.outputs.auto_merged }}" == "true" ]; then
-              echo "    Auto-merged successfully" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
-            fi
+            echo "✅ DEV: PR #${{ steps.pr-dev.outputs.pr_number }} - ${{ steps.pr-dev.outputs.pr_url }} successfully created." >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ DEV: Failed to create PR" >> $GITHUB_STEP_SUMMARY
+            echo "❌ DEV: Failed to create PR, hotfix branch might have been deleted." >> $GITHUB_STEP_SUMMARY
           fi
           
           if [ "${{ steps.pr-test.outcome }}" == "success" ]; then
-            echo "✅ TEST: PR #${{ steps.pr-test.outputs.pr_number }} - ${{ steps.pr-test.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ steps.pr-test.outputs.auto_merged }}" == "true" ]; then
-              echo "    Auto-merged successfully" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
-            fi
+            echo "✅ TEST: PR #${{ steps.pr-test.outputs.pr_number }} - ${{ steps.pr-test.outputs.pr_url }} successfully created." >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ TEST: Failed to create PR" >> $GITHUB_STEP_SUMMARY
+            echo "❌ TEST: Failed to create PR, hotfix branch might have been deleted." >> $GITHUB_STEP_SUMMARY
           fi
           
           if [ "${{ steps.pr-uat.outcome }}" == "success" ]; then
-            echo "✅ UAT: PR #${{ steps.pr-uat.outputs.pr_number }} - ${{ steps.pr-uat.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
-            if [ "${{ steps.pr-uat.outputs.auto_merged }}" == "true" ]; then
-              echo "    Auto-merged successfully" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "    Waiting for required checks to pass" >> $GITHUB_STEP_SUMMARY
-            fi
+            echo "✅ UAT: PR #${{ steps.pr-uat.outputs.pr_number }} - ${{ steps.pr-uat.outputs.pr_url }} successfully created." >> $GITHUB_STEP_SUMMARY
           else
-            echo "❌ UAT: Failed to create PR" >> $GITHUB_STEP_SUMMARY
+            echo "❌ UAT: Failed to create PR, hotfix branch might have been deleted." >> $GITHUB_STEP_SUMMARY
           fi
